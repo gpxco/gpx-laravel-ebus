@@ -1,0 +1,20 @@
+{
+  "name": "mayvenstudios/gpx-laravel-ebus",
+  "version": "1.0.0",
+  "description": "GPX Event BUS",
+  "keywords": [
+    "ebus"
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+
+  "require": {
+    "php": ">=8.1",
+    "danikdantist/queue-wrapper": "^2.0"
+  },
+  "autoload": {
+    "classmap": [
+      "src"
+    ]
+  }
+}

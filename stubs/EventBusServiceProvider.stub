@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Providers;
+
+use App\Services\EventBus\EventBusServiceProvider as ServiceProvider;
+use App\Services\EventBus\Contracts\Subscriber;
+
+class EventBusServiceProvider extends ServiceProvider
+{
+    /**
+     * The subscriber classes to register.
+     *
+     * @var array<Subscriber>
+     */
+    protected array $subscribers = [
+    ];
+}
