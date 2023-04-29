@@ -13,19 +13,17 @@ class EventBusApplicationServiceProvider extends ServiceProvider
     /**
      * The subscriber classes to register.
      *
-     * @var array<Subscriber>
+     * @var array<Subscriber::class> - list of Subscriber class name
      */
     protected array $subscribers = [
     ];
-
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
+    
+    public function register()
     {
-
+        $this->booting(function () {
+            /** @var WorkerProcess $service */
+            $service = $this->app->get(WorkerProcess::class);
+            $service->setSubscribers($this->subscribers);
+        });
     }
-
 }

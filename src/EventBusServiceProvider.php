@@ -10,21 +10,10 @@ use Illuminate\Support\ServiceProvider;
 
 class EventBusServiceProvider extends ServiceProvider
 {
-    /**
-     * The subscriber classes to register.
-     *
-     * @var array<Subscriber>
-     */
-    protected array $subscribers = [
-    ];
-
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function register()
     {
+        $this->configure();
+
         $this->app->singleton(Broadcaster::class, function () {
             $config = new KafkaConfig();
             $config->addBroker(config('gpx-event-bus.kafka.broker-list', ''));
@@ -37,7 +26,7 @@ class EventBusServiceProvider extends ServiceProvider
             return new Broadcaster($queueManager, $options);
         });
 
-        $this->app->bind(WorkerProcess::class, function () {
+        $this->app->singleton(WorkerProcess::class, function () {
             $config = new KafkaConfig();
             $config->addBroker(config('gpx-event-bus.kafka.broker-list', ''));
             $config->setKafkaRawConfig(config('gpx-event-bus.kafka.consumer-config', []));
@@ -46,14 +35,18 @@ class EventBusServiceProvider extends ServiceProvider
             $options = new Worker\WorkerOptions();
             $options->serviceConsumerName = config('gpx-event-bus.service.consumer-name', '');
 
-            return new WorkerProcess($demon, $options, array_map(function ($subscriberName) {
-                return app($subscriberName);
-            }, $this->subscribers));
+            return new WorkerProcess($demon, $options);
         });
 
         $this->offerPublishing();
         $this->registerCommands();
     }
+
+    protected function configure()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/gpx-event-bus.php', 'gpx-event-bus');
+    }
+
 
     /**
      * Register the Artisan commands.
@@ -65,6 +58,7 @@ class EventBusServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 Console\EventBusWorkCommand::class,
+                Console\InstallCommand::class,
             ]);
         }
     }
@@ -78,7 +72,7 @@ class EventBusServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../stubs/EventBusServiceProvider.stub' => app_path('Providers/EventBusServiceProvide.php'),
+                __DIR__.'/../stubs/EventBusServiceProvider.stub' => app_path('Providers/EventBusServiceProvider.php'),
             ], 'event-bus-provider');
 
             $this->publishes([

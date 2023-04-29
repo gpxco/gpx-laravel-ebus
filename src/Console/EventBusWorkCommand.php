@@ -53,9 +53,9 @@ class EventBusWorkCommand extends Command
                 $name = trim($name);
                 $defaultSubscriber = '\\App\\Listeners\\'.$name;
                 if (class_exists($defaultSubscriber)) {
-                    $subscribers[] = app($defaultSubscriber);
+                    $subscribers[] = $defaultSubscriber;
                 } elseif (class_exists($name)) {
-                    $subscribers[] = app($name);
+                    $subscribers[] = $name;
                 } else {
                     $this->error('Can\'t find listener '.$defaultSubscriber.' or '.$name);
 

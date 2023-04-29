@@ -8,17 +8,18 @@ use DanikDantist\QueueWrapper\Manager;
 class WorkerProcess
 {
     protected string $consumerName = '';
+    
+    /** @var array<Subscriber>  */
+    protected array $subscribers = [];
 
-    /**
-     * @param  Subscriber[]  $subscribers
-     */
-    public function __construct(protected Manager $queueManager, protected Worker\WorkerOptions $workerOptions, protected array $subscribers)
+   
+    public function __construct(protected Manager $queueManager, protected Worker\WorkerOptions $workerOptions)
     {
         $this->consumerName = $this->workerOptions->serviceConsumerName;
     }
 
     /**
-     * @param  Subscriber[]  $subscribers
+     * @param array<string> $subscribers - list of className which implement Subscriber interface
      * @return $this
      */
     public function setSubscribers(array $subscribers): static
@@ -46,10 +47,15 @@ class WorkerProcess
         /** @var Subscriber[] $subscribers */
         $subscribers = [];
         foreach ($this->subscribers as $subscriber) {
-            if ($subscriber instanceof Subscriber) {
-                $subscribers[] = $subscriber;
+            $interfaces = class_implements($subscriber);
+
+            if ($interfaces && in_array(Subscriber::class, $interfaces)) {
+                $subscribers[] = app($subscriber);
+            } else {
+                \Log::info("Subscriber: {$subscriber}, doesn't implement ".Subscriber::class." interface");
             }
         }
+
         $topicList = [];
         foreach ($subscribers as $subscriber) {
             $subscription = $subscriber->subscribedTo();

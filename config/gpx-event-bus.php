@@ -27,7 +27,7 @@ return [
             'auto.offset.reset' => 'earliest',
         ],
     ],
-    'logger' => App\Services\EventBus\Logger::class,
+    'logger' => GPX\EventBus\Logger::class,
     'service' => [
         'name' => $serviceName,
         /*
