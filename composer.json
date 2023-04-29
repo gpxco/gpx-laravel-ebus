@@ -12,9 +12,20 @@
     "php": ">=8.1",
     "danikdantist/queue-wrapper": "^2.0"
   },
+
   "autoload": {
-    "classmap": [
-      "src"
-    ]
+    "psr-4": {
+      "GPX\\EventBus\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "GPX\\EventBus\\EventBusServiceProvider"
+      ],
+      "aliases": {
+        "Broadcaster": "GPX\\EventBus\\Facades\\Broadcaster"
+      }
+    }
   }
 }
