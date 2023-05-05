@@ -73,10 +73,12 @@ trait EventBusBroadcast
                     $dirty = $model->getDirty();
                     /** @var Broadcaster $broadcaster */
                     $broadcaster = app(Broadcaster::class);
-                    if (! array_intersect(array_keys($dirty), $relation['attributes'])) {
+
+                    // don't check changed attributes if the model was deleted
+                    if ($eventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
                         return;
                     }
-
+                    
                     if (! empty($relation['watchWhen']) &&
                         array_sum(array_map(function ($item) use ($model) {
                             return $model->{$item[0]} == $item[2];

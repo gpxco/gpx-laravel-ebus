@@ -12,7 +12,7 @@ class EventBusOptions
 
     public array $watchedRelations = [];
 
-    public array $watchedEvents = ['saved'];
+    public array $watchedEvents = ['saved', 'deleted'];
 
     /**
      * Start configuring model with the default options.
