@@ -24,7 +24,7 @@ return [
             'topic.metadata.refresh.sparse' => true,
             'topic.metadata.refresh.interval.ms' => 600000,
             'socket.send.buffer.bytes' => 1000000,
-            'auto.offset.reset' => 'earliest',
+            //'auto.offset.reset' => 'earliest',//latest, earliest. By default latest
         ],
     ],
     'logger' => GPX\EventBus\Logger::class,
