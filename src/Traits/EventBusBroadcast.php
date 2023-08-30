@@ -7,6 +7,7 @@ use GPX\EventBus\Contracts\BroadcastableObject;
 use GPX\EventBus\EventBusOptions;
 use GPX\EventBus\Helpers\ModelRelations;
 use GPX\EventBus\Jobs\SendBatchOfEvents;
+use GPX\EventBus\Jobs\SendEvent;
 use GPX\EventBus\Relation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -71,8 +72,6 @@ trait EventBusBroadcast
             foreach ($observers as $observerClassName => $relation) {
                 $observerClassName::$eventName(function (Model $model) use ($eventName, $relation, $options) {
                     $dirty = $model->getDirty();
-                    /** @var Broadcaster $broadcaster */
-                    $broadcaster = app(Broadcaster::class);
 
                     // don't check changed attributes if the model was deleted
                     if ($eventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
@@ -92,7 +91,18 @@ trait EventBusBroadcast
 
                     if ($className === static::class) {
                         if ($model instanceof BroadcastableObject) {
-                            $broadcaster->fireObjectEvent($eventName, $model, $now);
+                            if ($model->getConnection()->transactionLevel() == 0) {
+                                /** @var Broadcaster $broadcaster */
+                                $broadcaster = app(Broadcaster::class);
+                                $broadcaster->fireObjectEvent($eventName, $model, $now);
+                            } else {
+                                SendEvent::dispatch(
+                                    $eventName,
+                                    $now,
+                                    $model->getKey(),
+                                    $className
+                                )->afterCommit();
+                            }
                         }
                     } elseif ($relation['backpath']) {
                         SendBatchOfEvents::dispatch(
@@ -103,7 +113,7 @@ trait EventBusBroadcast
                             $relation['backpath'],
                             $options->with,
                             $options->where
-                        );
+                        )->afterCommit();
                     }
                 });
             }
