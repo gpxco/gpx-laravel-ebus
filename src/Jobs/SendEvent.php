@@ -36,8 +36,12 @@ class SendEvent implements ShouldQueue
     public function handle()
     {
         $model = $this->modelClass::find($this->modelId);
-        if (! $model) {
-            return;
+        if (!$model) {
+            $model = $this->modelClass::findInCacheDeletedModels($this->modelId);
+
+            if (!$model) {
+                return;
+            }
         }
         /** @var Broadcaster $broadcaster */
         $broadcaster = app(Broadcaster::class);
