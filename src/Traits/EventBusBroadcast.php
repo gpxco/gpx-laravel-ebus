@@ -13,12 +13,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-use function Illuminate\Events\queueable;
-
 trait EventBusBroadcast
 {
     protected ?array $eventBusOptions = [];
-    protected static array $cacheDeletedModels = [];
 
     protected static function bootEventBusBroadcast(): void
     {
@@ -77,7 +74,7 @@ trait EventBusBroadcast
                     $dirty = $model->getDirty();
 
                     // don't check changed attributes if the model was deleted
-                    if ($eventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
+                    if (!in_array($eventName, ['deleted', 'deleting'])  && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
                         return;
                     }
 
@@ -87,10 +84,6 @@ trait EventBusBroadcast
                         }, $relation['watchWhen'])) != count($relation['watchWhen'])
                     ) {
                         return;
-                    }
-
-                    if ($eventName === 'deleted') {
-                        self::addToCacheDeletedModels($model);
                     }
 
                     $now = Carbon::now();
@@ -103,12 +96,21 @@ trait EventBusBroadcast
                                 $broadcaster = app(Broadcaster::class);
                                 $broadcaster->fireObjectEvent($eventName, $model, $now);
                             } else {
-                                SendEvent::dispatch(
-                                    $eventName,
-                                    $now,
-                                    $model->getKey(),
-                                    $className
-                                )->afterCommit();
+                                if (!method_exists($model, 'bootSoftDeletes') && $eventName === 'deleting') {
+                                    SendEvent::dispatchSync(
+                                        'deleted',
+                                        $now,
+                                        $model->getKey(),
+                                        $className
+                                    );
+                                } else {
+                                    SendEvent::dispatch(
+                                        $eventName,
+                                        $now,
+                                        $model->getKey(),
+                                        $className
+                                    )->afterCommit();
+                                }
                             }
                         }
                     } elseif ($relation['backpath']) {
@@ -143,16 +145,6 @@ trait EventBusBroadcast
     public function toBroadcast(): array
     {
         return (array) $this->toArray();
-    }
-
-    protected static function addToCacheDeletedModels(Model $model): void
-    {
-        self::$cacheDeletedModels[$model->id] = $model;
-    }
-
-    public static function findInCacheDeletedModels(int $id): Model | null
-    {
-        return self::$cacheDeletedModels[$id] ?? null;
     }
 
     abstract public static function getEventBusOptions(): EventBusOptions;

@@ -3,8 +3,6 @@
 namespace GPX\EventBus\Jobs;
 
 use GPX\EventBus\Broadcaster;
-use GPX\EventBus\Contracts\BroadcastableObject;
-use GPX\EventBus\Helpers\ModelRelations;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,11 +35,7 @@ class SendEvent implements ShouldQueue
     {
         $model = $this->modelClass::find($this->modelId);
         if (!$model) {
-            $model = $this->modelClass::findInCacheDeletedModels($this->modelId);
-
-            if (!$model) {
-                return;
-            }
+g            return;
         }
         /** @var Broadcaster $broadcaster */
         $broadcaster = app(Broadcaster::class);

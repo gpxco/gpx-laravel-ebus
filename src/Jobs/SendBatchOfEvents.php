@@ -42,7 +42,7 @@ class SendBatchOfEvents implements ShouldQueue
         $service = app(Broadcaster::class);
 
         $model = $this->modelClass::find($this->modelId);
-        if (! $model) {
+        if (!$model) {
             return;
         }
         $relation = ModelRelations::getModelRelationByPath($model, $this->path);
