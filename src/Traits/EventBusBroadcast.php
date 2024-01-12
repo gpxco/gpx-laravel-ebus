@@ -74,7 +74,7 @@ trait EventBusBroadcast
                     $dirty = $model->getDirty();
 
                     // don't check changed attributes if the model was deleted
-                    if (!in_array($eventName, ['deleted', 'deleting'])  && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
+                    if ($eventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
                         return;
                     }
 
@@ -96,26 +96,17 @@ trait EventBusBroadcast
                                 $broadcaster = app(Broadcaster::class);
                                 $broadcaster->fireObjectEvent($eventName, $model, $now);
                             } else {
-                                if (!method_exists($model, 'bootSoftDeletes') && $eventName === 'deleting') {
-                                    SendEvent::dispatchSync(
-                                        'deleted',
-                                        $now,
-                                        $model->getKey(),
-                                        $className
-                                    );
-                                } else {
-                                    SendEvent::dispatch(
-                                        $eventName,
-                                        $now,
-                                        $model->getKey(),
-                                        $className
-                                    )->afterCommit();
-                                }
+                                SendEvent::dispatch(
+                                    $eventName,
+                                    $now,
+                                    $model->getKey(),
+                                    $className
+                                )->afterCommit();
                             }
                         }
                     } elseif ($relation['backpath']) {
                         SendBatchOfEvents::dispatch(
-                            $eventName,
+                            'saved',
                             $now,
                             $model->getKey(),
                             $className,

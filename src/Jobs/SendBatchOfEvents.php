@@ -41,7 +41,7 @@ class SendBatchOfEvents implements ShouldQueue
         /** @var Broadcaster $service */
         $service = app(Broadcaster::class);
 
-        $model = $this->modelClass::find($this->modelId);
+        $model = $this->getModel();
         if (!$model) {
             return;
         }
@@ -61,6 +61,15 @@ class SendBatchOfEvents implements ShouldQueue
             });
         } else {
             \Log::debug('Can not send batch of events');
+        }
+    }
+
+    protected function getModel()
+    {
+        if (method_exists($this->modelClass, 'bootSoftDeletes')) {
+            return $this->modelClass::withTrashed()->find($this->modelId);
+        } else {
+            return $this->modelClass::find($this->modelId);
         }
     }
 }

@@ -33,14 +33,23 @@ class SendEvent implements ShouldQueue
 
     public function handle()
     {
-        $model = $this->modelClass::find($this->modelId);
+        $model = $this->getModel();
         if (!$model) {
-g            return;
+            return;
         }
         /** @var Broadcaster $broadcaster */
         $broadcaster = app(Broadcaster::class);
 
         $broadcaster->fireObjectEvent($this->eventName, $model, $this->eventAt);
         \Log::debug('SEND EVENT '.$this->eventName.' $model: '.$this->modelClass);
+    }
+
+    protected function getModel()
+    {
+        if (method_exists($this->modelClass, 'bootSoftDeletes')) {
+            return $this->modelClass::withTrashed()->find($this->modelId);
+        } else {
+            return $this->modelClass::find($this->modelId);
+        }
     }
 }
