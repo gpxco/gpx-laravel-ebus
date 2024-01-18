@@ -77,7 +77,7 @@ trait EventBusBroadcast
                     if ($eventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
                         return;
                     }
-                    
+
                     if (! empty($relation['watchWhen']) &&
                         array_sum(array_map(function ($item) use ($model) {
                             return $model->{$item[0]} == $item[2];
@@ -106,7 +106,7 @@ trait EventBusBroadcast
                         }
                     } elseif ($relation['backpath']) {
                         SendBatchOfEvents::dispatch(
-                            $eventName,
+                            'saved',
                             $now,
                             $model->getKey(),
                             $className,

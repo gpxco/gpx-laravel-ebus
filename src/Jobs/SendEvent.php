@@ -3,8 +3,6 @@
 namespace GPX\EventBus\Jobs;
 
 use GPX\EventBus\Broadcaster;
-use GPX\EventBus\Contracts\BroadcastableObject;
-use GPX\EventBus\Helpers\ModelRelations;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,8 +33,8 @@ class SendEvent implements ShouldQueue
 
     public function handle()
     {
-        $model = $this->modelClass::find($this->modelId);
-        if (! $model) {
+        $model = $this->getModel();
+        if (!$model) {
             return;
         }
         /** @var Broadcaster $broadcaster */
@@ -44,5 +42,14 @@ class SendEvent implements ShouldQueue
 
         $broadcaster->fireObjectEvent($this->eventName, $model, $this->eventAt);
         \Log::debug('SEND EVENT '.$this->eventName.' $model: '.$this->modelClass);
+    }
+
+    protected function getModel()
+    {
+        if (method_exists($this->modelClass, 'bootSoftDeletes')) {
+            return $this->modelClass::withTrashed()->find($this->modelId);
+        } else {
+            return $this->modelClass::find($this->modelId);
+        }
     }
 }
