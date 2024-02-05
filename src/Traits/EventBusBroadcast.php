@@ -78,11 +78,11 @@ trait EventBusBroadcast
                         return;
                     }
 
-                    if (! empty($relation['watchWhen']) &&
-                        array_sum(array_map(function ($item) use ($model) {
-                            return $model->{$item[0]} == $item[2];
-                        }, $relation['watchWhen'])) != count($relation['watchWhen'])
-                    ) {
+                    if (
+                        !static::isWatchable($model, $relation['watchWhen'])
+                        ||
+                        !static::isWatchable($model, $options->watchWhen))
+                    {
                         return;
                     }
 
@@ -136,6 +136,23 @@ trait EventBusBroadcast
     public function toBroadcast(): array
     {
         return (array) $this->toArray();
+    }
+
+    public static function isWatchable($model, array $conditions): bool
+    {
+        if (! empty($conditions) &&
+            array_sum(array_map(function ($item) use ($model) {
+                if ($item[1] == '!=') {
+                    return $model->{$item[0]} != $item[2];
+                } else {
+                    return $model->{$item[0]} == $item[2];
+                }
+            }, $conditions)) != count($conditions)
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     abstract public static function getEventBusOptions(): EventBusOptions;
