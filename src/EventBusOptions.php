@@ -45,7 +45,7 @@ class EventBusOptions
         return $this;
     }
 
-    public function watchModelWhen(string $field, string $value, string $operator = '='): static
+    public function watchModelWhen(string $field, string $operator, string $value): static
     {
         $this->watchWhen[] = [$field, $operator, $value];
 
