@@ -8,6 +8,8 @@ class EventBusOptions
 
     public array $where = [];
 
+    public array $watchWhen = [];
+
     public array $watchedAttributes = [];
 
     public array $watchedRelations = [];
@@ -39,6 +41,13 @@ class EventBusOptions
     public function watchAttributes(array $attributes): static
     {
         $this->watchedAttributes = $attributes;
+
+        return $this;
+    }
+
+    public function watchModelWhen(string $field, string $operator, string $value): static
+    {
+        $this->watchWhen[] = [$field, $operator, $value];
 
         return $this;
     }

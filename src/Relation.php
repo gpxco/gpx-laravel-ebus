@@ -15,9 +15,9 @@ class Relation
         return new static($attributePath, $backPath);
     }
 
-    public function watchModelWhen(string $field, string $value): static
+    public function watchModelWhen(string $field, string $operator, string $value): static
     {
-        $this->watchWhen[] = [$field, '=', $value];
+        $this->watchWhen[] = [$field, $operator, $value];
 
         return $this;
     }
