@@ -68,51 +68,47 @@ trait EventBusBroadcast
         }
 
         $events = collect($options->watchedEvents);
-        $events->each(function ($eventName) use ($observers, $options) {
+        $events->each(function ($observebleEventName) use ($observers, $options) {
             foreach ($observers as $observerClassName => $relation) {
-                $observerClassName::$eventName(function (Model $model) use ($eventName, $relation, $options) {
+                $observerClassName::$observebleEventName(function (Model $model) use ($observebleEventName, $relation, $options, $observerClassName) {
                     $dirty = $model->getDirty();
 
                     // don't check changed attributes if the model was deleted
-                    if ($eventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
-                        return;
-                    }
-
-                    if (
-                        !static::isWatchable($model, $relation['watchWhen'])
-                        ||
-                        !static::isWatchable($model, $options->watchWhen))
-                    {
+                    if ($observebleEventName !== 'deleted' && ! array_intersect(array_keys($dirty), $relation['attributes'])) {
                         return;
                     }
 
                     $now = Carbon::now();
-                    $className = get_class($model);
-
-                    if ($className === static::class) {
+                    if ($observerClassName === static::class) {
+                        if (!static::isWatchable($model, $options->watchWhen)) {
+                            return;
+                        }
                         if ($model instanceof BroadcastableObject) {
                             if ($model->getConnection()->transactionLevel() == 0) {
                                 /** @var Broadcaster $broadcaster */
                                 $broadcaster = app(Broadcaster::class);
-                                $broadcaster->fireObjectEvent($eventName, $model, $now);
+                                $broadcaster->fireObjectEvent($observebleEventName, $model, $now);
                             } else {
                                 SendEvent::dispatch(
-                                    $eventName,
+                                    $observebleEventName,
                                     $now,
                                     $model->getKey(),
-                                    $className
+                                    $observerClassName
                                 )->afterCommit();
                             }
                         }
                     } elseif ($relation['backpath']) {
+                        if (!static::isWatchable($model, $relation['watchWhen'])) {
+                            return;
+                        }
                         SendBatchOfEvents::dispatch(
                             'saved',
                             $now,
                             $model->getKey(),
-                            $className,
+                            $observerClassName,
                             $relation['backpath'],
                             $options->with,
-                            $options->where
+                            $options->watchWhen
                         )->afterCommit();
                     }
                 });
@@ -142,11 +138,27 @@ trait EventBusBroadcast
     {
         if (! empty($conditions) &&
             array_sum(array_map(function ($item) use ($model) {
-                if ($item[1] == '!=') {
-                    return $model->{$item[0]} != $item[2];
+                $isDirty = $model->isDirty($item[0]);
+
+                if ($isDirty) {
+                    $isCreated = $model->isDirty($model->getKeyName());
+                    $original = $model->getOriginal($item[0]);
+                    $originalValue = $original instanceof \UnitEnum ? $original->value : $original;
+                    $dirty = $model->{$item[0]};
+                    $dirtyValue = $dirty instanceof \UnitEnum ? $dirty->value : $dirty;
+                    if ($item[1] == '!=') {
+                        return count(array_intersect([$originalValue, $dirtyValue], $item[2])) != ($isCreated ? 1 : 2);
+                    } else {
+                        return count(array_intersect([$originalValue, $dirtyValue], $item[2])) > 0;
+                    }
                 } else {
-                    return $model->{$item[0]} == $item[2];
+                    if ($item[1] == '!=') {
+                        return !in_array($model->{$item[0]}, $item[2]);
+                    } else {
+                        return in_array($model->{$item[0]}, $item[2]);
+                    }
                 }
+
             }, $conditions)) != count($conditions)
         ) {
             return false;

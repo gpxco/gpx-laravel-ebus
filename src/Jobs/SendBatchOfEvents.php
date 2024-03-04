@@ -53,7 +53,11 @@ class SendBatchOfEvents implements ShouldQueue
                 ->with($this->with);
 
             foreach ($this->where as $where) {
-                $relation->where($where[0], $where[1]);
+                if ($where[1] == '!=') {
+                    $relation->whereNotIn($where[0], $where[2]);
+                } else {
+                    $relation->whereIn($where[0], $where[2]);
+                }
             }
 
             $relation->chunk(500, function ($devices) use ($service) {
