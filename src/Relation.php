@@ -17,7 +17,9 @@ class Relation
 
     public function watchModelWhen(string $field, string $operator, string $value): static
     {
-        $this->watchWhen[] = [$field, $operator, $value];
+        $key = $field.$operator;
+        $values = isset($this->watchWhen[$key]) ? $this->watchWhen[$key][2] : [];
+        $this->watchWhen[$key] = [$field, $operator, array_unique(array_merge($values, [$value]))];
 
         return $this;
     }
