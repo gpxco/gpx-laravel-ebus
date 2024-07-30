@@ -29,6 +29,8 @@ class SendEvent implements ShouldQueue
         protected int $modelId,
         protected string $modelClass,
     ) {
+        $this->timeout = config('gpx-event-bus.queue.timeout', 300);
+        $this->onQueue(config('gpx-event-bus.queue.name', 'default'));
     }
 
     public function handle()
