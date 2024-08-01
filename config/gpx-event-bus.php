@@ -46,4 +46,8 @@ return [
        */
         'consumer-name' => env('EVENTBUS_SERVICE_CONSUMER_NAME', $serviceName),
     ],
+    'queue' => [
+        'timeout' => 300,
+        'name' => 'default'
+    ]
 ];

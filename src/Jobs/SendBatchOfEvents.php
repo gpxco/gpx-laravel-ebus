@@ -34,6 +34,8 @@ class SendBatchOfEvents implements ShouldQueue
         protected array $with = [],
         protected array $where = []
     ) {
+        $this->timeout = config('gpx-event-bus.queue.timeout', 300);
+        $this->onQueue(config('gpx-event-bus.queue.name', 'default'));
     }
 
     public function handle()
