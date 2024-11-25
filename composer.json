@@ -1,6 +1,6 @@
 {
-  "name": "mayvenstudios/gpx-laravel-ebus",
-  "version": "1.4.1",
+  "name": "gpxco/gpx-laravel-ebus",
+  "version": "1.4.2",
   "description": "GPX Event BUS",
   "keywords": [
     "ebus"
