@@ -1,2 +1,5 @@
 /.idea
-vendor
+vendor/
+.phpunit.cache/
+composer.phar
+.DS_Store
