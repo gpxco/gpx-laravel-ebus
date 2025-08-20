@@ -8,14 +8,14 @@ First you need to add this section to composer.json in your application
 "repositories": [
     {
         "type": "vcs",
-        "url": "git@github.com:mayvenstudios/gpx-laravel-ebus.git"
+        "url": "git@github.com:gpxco/gpx-laravel-ebus.git"
     }
 ],
 ...
 ```
 Then you need to install package
 ```shell
-composer require "mayvenstudios/gpx-laravel-ebus"
+composer require "gpxco/gpx-laravel-ebus"
 ```
 Don't forget to define required .env variable
 ```dotenv
