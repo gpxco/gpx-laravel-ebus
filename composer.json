@@ -19,6 +19,11 @@
       "GPX\\EventBus\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
   "extra": {
     "laravel": {
       "providers": [
@@ -28,5 +33,9 @@
         "Broadcaster": "GPX\\EventBus\\Facades\\Broadcaster"
       }
     }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.3",
+    "mockery/mockery": "^1.6"
   }
 }
