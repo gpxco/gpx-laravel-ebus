@@ -36,3 +36,17 @@ jobs:
       
     - name: Run test suite
       run: composer run-script test
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: failure()
+    steps:
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,message,commit,author,action,ref,workflow
+          mention: here
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
