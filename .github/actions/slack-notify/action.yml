@@ -1,0 +1,71 @@
+name: Slack Notification
+description: Send a Slack notification via incoming webhook
+
+inputs:
+  status:
+    description: 'Job status (success or failure)'
+    required: true
+  environment:
+    description: 'Environment name (Staging, Production, Tests, etc.)'
+    required: true
+  webhook:
+    description: 'Slack webhook URL'
+    required: true
+  mention-here:
+    description: 'Whether to mention @here'
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare notification variables
+      id: vars
+      shell: bash
+      run: |
+        echo "short_sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+        MSG="${COMMIT_MSG%%$'\n'*}"
+        MSG="${MSG//\\/\\\\}"
+        MSG="${MSG//\"/\\\"}"
+        echo "commit_msg=${MSG}" >> $GITHUB_OUTPUT
+
+        if [ "${{ inputs.status }}" = "failure" ]; then
+          echo "color=#cb2431" >> $GITHUB_OUTPUT
+          echo "status_text=failed" >> $GITHUB_OUTPUT
+        else
+          echo "color=#2cbe4e" >> $GITHUB_OUTPUT
+          echo "status_text=succeeded" >> $GITHUB_OUTPUT
+        fi
+
+        if [ "${{ inputs.mention-here }}" = "true" ]; then
+          echo "mention=<!here> " >> $GITHUB_OUTPUT
+        else
+          echo "mention=" >> $GITHUB_OUTPUT
+        fi
+
+        # Build links
+        LINKS="<${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}|${GITHUB_SHA::8}>"
+        LINKS="${LINKS} · <${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|Workflow>"
+        if [ -n "$PR_NUMBER" ]; then
+          LINKS="${LINKS} · <${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR_NUMBER}|PR #${PR_NUMBER}>"
+        fi
+        echo "links=${LINKS}" >> $GITHUB_OUTPUT
+      env:
+        COMMIT_MSG: ${{ github.event.head_commit.message || github.event.pull_request.title || '' }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+
+    - name: Send Slack notification
+      uses: slackapi/slack-github-action@v2.1.1
+      with:
+        webhook: ${{ inputs.webhook }}
+        webhook-type: incoming-webhook
+        payload: |
+          {
+            "attachments": [
+              {
+                "color": "${{ steps.vars.outputs.color }}",
+                "text": "${{ steps.vars.outputs.mention }}*${{ github.repository }}* — ${{ inputs.environment }} *${{ steps.vars.outputs.status_text }}*\n${{ steps.vars.outputs.commit_msg }}\n${{ steps.vars.outputs.links }}"
+              }
+            ]
+          }

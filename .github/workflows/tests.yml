@@ -42,11 +42,10 @@ jobs:
     needs: [test]
     if: failure()
     steps:
-      - uses: 8398a7/action-slack@v3
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-notify
         with:
           status: failure
-          fields: repo,message,commit,author,action,ref,workflow
-          mention: here
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          environment: Tests
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          mention-here: 'true'
