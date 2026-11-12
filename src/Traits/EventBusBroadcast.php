@@ -21,7 +21,8 @@ trait EventBusBroadcast
     {
         // Laravel 13 forbids creating a model instance while that model is still
         // booting. Defer observer registration until after boot completes.
-        static::booted(function () {
+        // In Laravel 13 the registration API is whenBooted() (booted() is the empty hook).
+        static::whenBooted(function () {
             static::registerEventBusBroadcastObservers();
         });
     }
