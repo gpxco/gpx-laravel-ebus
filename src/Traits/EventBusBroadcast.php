@@ -19,6 +19,15 @@ trait EventBusBroadcast
 
     protected static function bootEventBusBroadcast(): void
     {
+        // Laravel 13 forbids creating a model instance while that model is still
+        // booting. Defer observer registration until after boot completes.
+        static::booted(function () {
+            static::registerEventBusBroadcastObservers();
+        });
+    }
+
+    protected static function registerEventBusBroadcastObservers(): void
+    {
         $options = static::getEventBusOptions();
 
         $attributesModels = [];
