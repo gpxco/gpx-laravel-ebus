@@ -2,35 +2,66 @@
 
 ## Releases always need a git tag
 
-This package is consumed via VCS (`git@github.com:gpxco/gpx-laravel-ebus.git`). Apps pin an exact version (`1.4.2`, `1.5.0`, …). Composer resolves that **only if a matching tag exists on the remote**.
+This package is consumed via VCS (`git@github.com:gpxco/gpx-laravel-ebus.git`). Apps pin an exact version (`1.4.2`, `1.5.0`, `1.5.0-rc.1`, …). Composer resolves that **only if a matching tag exists on the remote**.
 
-**Every published version must have a tag.** Do not leave a version bump on `master` without pushing the tag.
+**Every published version must have a tag.** A tag points at a commit SHA — it does not disappear when the branch merges into `master`.
 
-Tag format (existing convention): `v` + semver from `composer.json` `version`.
+Tag format: `v` + semver (Composer version without the leading `v`).
 
-| `composer.json` `version` | git tag |
-|---|---|
-| `1.4.2` | `v1.4.2` |
-| `1.5.0` | `v1.5.0` |
+| Kind | Example `composer.json` / require | git tag | Where it may be created |
+|---|---|---|---|
+| Stable | `1.5.0` | `v1.5.0` | Prefer on `master` after merge |
+| Release candidate | `1.5.0-rc.1` | `v1.5.0-rc.1` | Allowed on the feature branch |
 
 ## How to ship a new version
 
-1. Work on a branch (e.g. `eng-<N>`). Update `composer.json` `version`, code, tests.
-2. Open a PR into `master`. Wait for CI (`composer test`).
-3. Merge the PR to `master`.
-4. **On `master` after merge**, create and push the tag:
+### 1. Feature branch + release candidate (before trusting master)
+
+Use this while apps still need the previous major line on `master` (e.g. `1.4.x` for older Laravel) and the new line is only ready to try.
+
+1. Work on a branch (e.g. `eng-<N>`). Set `composer.json` `version` to a **pre-release**, e.g. `1.5.0-rc.1`.
+2. Push the branch, open a PR into `master`, wait for CI (`composer test`).
+3. On that branch commit, create and push the RC tag:
+
+```bash
+git checkout eng-3073   # or current feature branch
+git pull
+git tag v1.5.0-rc.1
+git push origin v1.5.0-rc.1
+```
+
+4. Point upgrading apps at the RC, e.g. `"gpxco/gpx-laravel-ebus": "1.5.0-rc.1"` (path/`packages/` overrides off). Keep other apps on the previous stable (`1.4.2`) until they upgrade.
+
+Bump RC numbers if needed (`v1.5.0-rc.2`, …). Do **not** move an existing tag.
+
+### 2. Stable release (when it is no longer a candidate)
+
+When the branch is validated and ready as the real release:
+
+1. Set `composer.json` `version` to the stable semver (`1.5.0`).
+2. Merge the PR into `master`.
+3. **On `master` after merge**, tag and push the stable version:
 
 ```bash
 git checkout master
 git pull origin master
-# confirm composer.json version matches the release, e.g. 1.5.0
 git tag v1.5.0
 git push origin v1.5.0
 ```
 
-5. Only then bump consuming apps (`gpx-engine`, `gpx-device-api`, `gpx-imitator`, `gpx-geocoding`) to that version and remove any path/`packages/` overrides.
+4. Bump consuming apps from `1.5.0-rc.*` to `1.5.0`.
 
-Do **not** tag a commit that is only on a feature branch and not yet on `master`. Do **not** tell apps to require `1.5.0` before `v1.5.0` is on `origin`.
+The earlier `v1.5.0-rc.1` tag remains on its commit; that is fine. New installs should use the stable tag.
+
+### Parallel lines (optional)
+
+If `master` becomes the new major and older Laravel still needs fixes, cut a maintenance branch from the last `v1.4.*` commit (e.g. `1.4.x`) and only tag `v1.4.*` from there.
+
+## Do not
+
+- Publish a stable `v1.5.0` while the change is still a candidate — use `v1.5.0-rc.N` on the branch instead.
+- Tell apps to require `1.5.0` before `v1.5.0` exists on `origin`.
+- Retag / force-push an existing version tag.
 
 ## Testing
 

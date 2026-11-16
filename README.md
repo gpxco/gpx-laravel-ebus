@@ -2,7 +2,12 @@
 
 ## Releasing
 
-Apps pin exact versions from this repo’s **git tags** (e.g. `v1.4.2`). Merge the PR to `master` first, then tag and push (`v` + `composer.json` version). Never publish a version without a tag. Details for agents: `CLAUDE.md`.
+Apps pin exact versions from this repo’s **git tags**. Every published version needs a tag (`v` + semver).
+
+1. **Release candidate on the feature branch** — allowed while validating (e.g. `v1.5.0-rc.1`). Upgrading apps can require `1.5.0-rc.1`; others stay on the previous stable (`1.4.2`).
+2. **Stable after merge to `master`** — when it is no longer a candidate, merge, then tag `v1.5.0` on `master` and move apps to `1.5.0`.
+
+Tags point at commits; they are not removed when the branch merges. Full rules for agents: `CLAUDE.md`.
 
 ## Testing
 
