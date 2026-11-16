@@ -1,5 +1,28 @@
 ## GPX event bus
 
+## Releasing
+
+Apps pin exact versions from this repo’s **git tags**. Every published version needs a tag (`v` + semver).
+
+1. **Release candidate on the feature branch** — allowed while validating (e.g. `v1.5.0-rc.1`). Upgrading apps can require `1.5.0-rc.1`; others stay on the previous stable (`1.4.2`).
+2. **Stable after merge to `master`** — when it is no longer a candidate, merge, then tag `v1.5.0` on `master` and move apps to `1.5.0`.
+
+Tags point at commits; they are not removed when the branch merges. Full rules for agents: `CLAUDE.md`.
+
+## Testing
+
+Package tests are PHPUnit (`composer test`). Feature tests use Orchestra Testbench as a **require-dev** dependency only (`orchestra/testbench` ^11 for Laravel 13). Applications that require this package never install Testbench.
+
+Prefer a Docker sibling from the **`gpx-device-api` image** (PHP extensions + Composer), mounting this checkout at `/var/www/application`. Same sibling pattern as device-api worktrees in [gpx-docs `repositories/gpx-device-api.md`](https://github.com/gpxco/gpx-docs/blob/master/repositories/gpx-device-api.md) (“Running a worktree's tests”) — no app DB needed for this package, only `composer test`:
+
+```bash
+# example: gpx-laravel-ebus-eng-3073 from gpx-docker-gpx-device-api, network gpx-docker_gpx-network
+docker exec -u 1000:1000 -e HOME=/tmp -w /var/www/application gpx-laravel-ebus-<branch> \
+  composer test
+```
+
+CI also runs `composer test` on push/PR to `master` / `main`.
+
 ## How to install it
 
 First you need to add this section to composer.json in your application
