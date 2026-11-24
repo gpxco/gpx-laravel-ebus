@@ -1,19 +1,17 @@
 {
   "name": "gpxco/gpx-laravel-ebus",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "GPX Event BUS",
   "keywords": [
     "ebus"
   ],
   "minimum-stability": "stable",
   "prefer-stable": true,
-
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "danikdantist/queue-wrapper": "^2.0",
-    "illuminate/support": "^8.0|^9.0|^10.0|^11.0"
+    "illuminate/support": "^12.8|^13.0"
   },
-
   "autoload": {
     "psr-4": {
       "GPX\\EventBus\\": "src/"
@@ -35,6 +33,7 @@
     }
   },
   "require-dev": {
+    "orchestra/testbench": "^11.0",
     "phpunit/phpunit": "^12.3",
     "mockery/mockery": "^1.6"
   },

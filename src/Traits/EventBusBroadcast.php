@@ -19,6 +19,15 @@ trait EventBusBroadcast
 
     protected static function bootEventBusBroadcast(): void
     {
+        // Laravel 13 forbids `new static()` while the model is still booting.
+        // whenBooted (Laravel >= 12.8) runs after boot finishes.
+        static::whenBooted(static function () {
+            static::registerEventBusBroadcastObservers();
+        });
+    }
+
+    protected static function registerEventBusBroadcastObservers(): void
+    {
         $options = static::getEventBusOptions();
 
         $attributesModels = [];
